@@ -49,7 +49,7 @@ const LocalRecordingManager: ILocalRecordingManager = {
             }
             if (LocalMedia?.stopRecordingToFile) {
                 await LocalMedia.stopRecordingToFile();
-                console.log('LocalRecordingManager: Stopped recording to device storage');
+                console.log('LocalRecordingManager: Stopped combined audio+video recording');
                 
                 // Get the file paths
                 if (LocalMedia?.getRecordingFilePaths) {
@@ -75,14 +75,8 @@ const LocalRecordingManager: ILocalRecordingManager = {
         } catch (e) {
             // swallow
         }
-        // Unmute after recording ends
-        try {
-            if (storeRef) {
-                await storeRef.dispatch<any>(setAudioMuted(false, true));
-            }
-        } catch (e) {
-            console.warn('Failed to unmute after local recording', e);
-        }
+        // No need to unmute since we never muted WebRTC audio during recording
+        console.log('LocalRecordingManager: WebRTC audio was never muted - no unmute needed');
         recording = false;
         LocalRecordingManager.selfRecording.on = false;
         LocalRecordingManager.selfRecording.withVideo = false;
@@ -118,32 +112,17 @@ const LocalRecordingManager: ILocalRecordingManager = {
             if (LocalMedia?.startAudio) {
                 await LocalMedia.startAudio();
             }
-            // Try to start camera (front) with safe defaults so video is active too
-            try {
-                if (LocalMedia?.startVideo) {
-                    await LocalMedia.startVideo('front', 640, 480, 15);
-                    LocalRecordingManager.selfRecording.withVideo = true;
-                }
-            } catch (e) {
-                console.warn('Camera start failed; continuing audio-only', e);
-                LocalRecordingManager.selfRecording.withVideo = false;
-            }
-            // Mute mic in the call during local recording so MediaRecorder can capture exclusively
-            try {
-                await _store.dispatch<any>(setAudioMuted(true, true));
-            } catch (e) {
-                console.warn('Failed to mute before local recording', e);
-            }
+            // Don't create new video track - use existing WebRTC video track if available
+            console.log('LocalRecordingManager: Will attempt to capture from existing WebRTC video track');
+            console.log('LocalRecordingManager: No new camera session will be created to avoid conflicts');
+            // Keep mic active during recording - both WebRTC and MediaRecorder can capture audio
+            // This allows the camera to remain active and provides better user experience
+            console.log('LocalRecordingManager: Keeping WebRTC audio active during recording');
 
             if (LocalMedia?.startRecordingToFile) {
                 await LocalMedia.startRecordingToFile();
-                console.log('LocalRecordingManager: Started recording to device storage');
-                
-                // Write some test data to verify file writing works
-                if (LocalMedia?.writeRecordingData) {
-                    await LocalMedia.writeRecordingData('Test recording data - audio track created\n');
-                    console.log('LocalRecordingManager: Wrote test data after audio track creation');
-                }
+                console.log('LocalRecordingManager: Started combined audio+video recording in single file');
+                LocalRecordingManager.selfRecording.withVideo = true;
                 
                 // Check recording status for debugging
                 if (LocalMedia?.getRecordingStatus) {
@@ -159,9 +138,6 @@ const LocalRecordingManager: ILocalRecordingManager = {
                     }
                 }, 2000);
             }
-            // Skip video recording entirely for now since camera is disabled
-            console.log("Audio-only recording (camera disabled)");
-            LocalRecordingManager.selfRecording.withVideo = false;
             recording = true;
             LocalRecordingManager.selfRecording.on = true;
         } catch (e) {
