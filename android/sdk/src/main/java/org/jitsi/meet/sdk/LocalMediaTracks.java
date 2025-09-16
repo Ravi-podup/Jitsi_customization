@@ -801,19 +801,50 @@ final class LocalMediaTracks {
             int height = i420Buffer.getHeight();
             android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888);
 
-            // Convert I420 to ARGB
+            // Convert I420 to ARGB with full color information
             int[] argb = new int[width * height];
 
-            // Get Y plane data
+            // Get Y, U, V plane data
             java.nio.ByteBuffer yPlane = i420Buffer.getDataY();
-            byte[] yData = new byte[yPlane.remaining()];
-            yPlane.get(yData);
+            java.nio.ByteBuffer uPlane = i420Buffer.getDataU();
+            java.nio.ByteBuffer vPlane = i420Buffer.getDataV();
 
-            // Simple grayscale conversion (Y plane only for now)
-            for (int i = 0; i < width * height && i < yData.length; i++) {
-                int y = yData[i] & 0xFF;
-                // Simple grayscale conversion
-                argb[i] = 0xFF000000 | (y << 16) | (y << 8) | y;
+            byte[] yData = new byte[yPlane.remaining()];
+            byte[] uData = new byte[uPlane.remaining()];
+            byte[] vData = new byte[vPlane.remaining()];
+
+            yPlane.get(yData);
+            uPlane.get(uData);
+            vPlane.get(vData);
+
+            // Proper I420 to ARGB conversion with full color
+            int uvWidth = width / 2;
+            int uvHeight = height / 2;
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int yIndex = y * width + x;
+                    int uvIndex = (y / 2) * uvWidth + (x / 2);
+
+                    if (yIndex < yData.length && uvIndex < uData.length && uvIndex < vData.length) {
+                        int yValue = yData[yIndex] & 0xFF;
+                        int uValue = uData[uvIndex] & 0xFF;
+                        int vValue = vData[uvIndex] & 0xFF;
+
+                        // YUV to RGB conversion
+                        int r = (int) (yValue + 1.402 * (vValue - 128));
+                        int g = (int) (yValue - 0.344136 * (uValue - 128) - 0.714136 * (vValue - 128));
+                        int b = (int) (yValue + 1.772 * (uValue - 128));
+
+                        // Clamp values to 0-255 range
+                        r = Math.max(0, Math.min(255, r));
+                        g = Math.max(0, Math.min(255, g));
+                        b = Math.max(0, Math.min(255, b));
+
+                        // Create ARGB pixel
+                        argb[yIndex] = 0xFF000000 | (r << 16) | (g << 8) | b;
+                    }
+                }
             }
 
             bitmap.setPixels(argb, 0, width, 0, 0, width, height);
@@ -1046,7 +1077,7 @@ final class LocalMediaTracks {
                     @Override
                     public void onFrame(VideoFrame frame) {
                         if (videoSurface != null && isRecordingVideo) {
-                            renderWebRtcFrameToSurface(frame);
+                            renderRealCameraFrameToSurface(frame);
                         }
                     }
                 };
@@ -1079,7 +1110,7 @@ final class LocalMediaTracks {
                 @Override
                 public void onFrame(VideoFrame frame) {
                     if (videoSurface != null && isRecordingVideo) {
-                        renderWebRtcFrameToSurface(frame);
+                        renderRealCameraFrameToSurface(frame);
                     }
                 }
             };
@@ -1162,37 +1193,6 @@ final class LocalMediaTracks {
         }
     }
 
-    private void renderWebRtcFrameToSurface(VideoFrame frame) {
-        try {
-            // This is a simplified approach - in a real implementation,
-            // you would need to convert the VideoFrame to a format that can be drawn to the Surface
-            // For now, we'll draw a frame indicator to show that WebRTC frames are being captured
-
-            android.graphics.Canvas canvas = videoSurface.lockCanvas(null);
-            if (canvas != null) {
-                android.graphics.Paint paint = new android.graphics.Paint();
-
-                // Draw a green background to indicate WebRTC frames are being captured
-                paint.setColor(android.graphics.Color.GREEN);
-                canvas.drawRect(0, 0, 640, 480, paint);
-
-                paint.setColor(android.graphics.Color.WHITE);
-                paint.setTextSize(32);
-                canvas.drawText("ACTIVE CAMERA CAPTURED", 20, 50, paint);
-                canvas.drawText("Track ID: " + videoTrack.id(), 20, 100, paint);
-                canvas.drawText("Frame: " + frame.getTimestampNs(), 20, 150, paint);
-                canvas.drawText("Size: " + frame.getRotatedWidth() + "x" + frame.getRotatedHeight(), 20, 200, paint);
-
-                // Add recording duration
-                long duration = (System.currentTimeMillis() - recordingStartTime) / 1000;
-                canvas.drawText("Duration: " + duration + "s", 20, 250, paint);
-
-                videoSurface.unlockCanvasAndPost(canvas);
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "Error rendering WebRTC frame to surface", e);
-        }
-    }
 
     private void startSimpleBlackFrameGeneration() {
         Log.i(TAG, "Starting simple black frame generation");

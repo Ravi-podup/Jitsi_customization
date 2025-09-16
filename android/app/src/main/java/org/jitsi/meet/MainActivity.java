@@ -156,9 +156,15 @@ public class MainActivity extends JitsiMeetActivity {
         JitsiMeetConferenceOptions defaultOptions
             = new JitsiMeetConferenceOptions.Builder()
             .setServerURL(buildURL(defaultURL))
+//        recorder.stage.podup.com
+//        recorder-test.podup.com
             .setFeatureFlag("welcomepage.enabled", true)
             .setFeatureFlag("server-url-change.enabled", !configurationByRestrictions)
-            .build();
+            .setVideoMuted(false).setAudioMuted(false)
+            .setConfigOverride("startWithVideoMuted", false)
+            .setConfigOverride("startWithAudioMuted", false)
+            .setConfigOverride("startAudioOnly", false)
+          .build();
         JitsiMeet.setDefaultConferenceOptions(defaultOptions);
     }
 
