@@ -93,11 +93,36 @@ MiddlewareRegistry.register(store => next => action => {
         let jitsiTrack;
 
         if (localTrack && (jitsiTrack = localTrack.jitsiTrack)) {
+            // Get current camera facing mode before switching
+            const currentFacingMode = jitsiTrack.getCameraFacingMode();
+            
             // XXX MediaStreamTrack._switchCamera is a custom function
             // implemented in react-native-webrtc for video which switches
             // between the cameras via a native WebRTC library implementation
             // without making any changes to the track.
             jitsiTrack._switchCamera();
+
+            // Get new camera facing mode after switching
+            const newFacingMode = jitsiTrack.getCameraFacingMode();
+            
+            // Log camera switch event with values
+            console.log('Camera switched from:', currentFacingMode, 'to:', newFacingMode);
+            
+            // Sync camera state with LocalRecordingManager if available
+            if (typeof window !== 'undefined' && (window as any).LocalRecordingManager) {
+                try {
+                    // Check if LocalRecordingManager is still valid
+                    const manager = (window as any).LocalRecordingManager;
+                    if (manager && typeof manager.syncCameraStateWithNative === 'function') {
+                        manager.syncCameraStateWithNative(newFacingMode);
+                        console.log('Middleware: Synced camera state with LocalRecordingManager:', newFacingMode);
+                    } else {
+                        console.log('Middleware: LocalRecordingManager not available for camera sync');
+                    }
+                } catch (error) {
+                    console.warn('Middleware: Failed to sync with LocalRecordingManager:', error);
+                }
+            }
 
             // Don't mirror the video of the back/environment-facing camera.
             const mirror

@@ -155,7 +155,7 @@ public class MainActivity extends JitsiMeetActivity {
         // Set default options
         JitsiMeetConferenceOptions defaultOptions
             = new JitsiMeetConferenceOptions.Builder()
-            .setServerURL(buildURL(defaultURL))
+            .setServerURL(buildURL("https://recorder-test.podup.com"))
 //        recorder.stage.podup.com
 //        recorder-test.podup.com
             .setFeatureFlag("welcomepage.enabled", true)

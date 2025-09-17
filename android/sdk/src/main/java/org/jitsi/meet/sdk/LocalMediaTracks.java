@@ -49,6 +49,7 @@ final class LocalMediaTracks {
     enum Facing { FRONT, BACK }
 
     private static LocalMediaTracks instance;
+    private Facing currentCameraFacing = Facing.FRONT; // Track current camera facing mode
 
     static synchronized LocalMediaTracks getInstance() {
         if (instance == null) {
@@ -1176,11 +1177,15 @@ final class LocalMediaTracks {
 
             ensureInitialized();
 
-            // Create a video track with the same settings as the main call
-            VideoTrack recordingVideoTrack = createVideoTrack(trackId, Facing.FRONT, 640, 480, 30);
+            // Use the current camera facing mode based on user switching
+            Facing currentFacing = currentCameraFacing;
+            Log.i(TAG, "Using current camera facing mode for recording: " + currentFacing);
+
+            // Create a video track with the current camera facing mode
+            VideoTrack recordingVideoTrack = createVideoTrack(trackId, currentFacing, 640, 480, 30);
 
             if (recordingVideoTrack != null) {
-                Log.i(TAG, "Successfully created shared camera video track: " + recordingVideoTrack.id());
+                Log.i(TAG, "Successfully created shared camera video track: " + recordingVideoTrack.id() + " with facing: " + currentFacing);
                 return recordingVideoTrack;
             } else {
                 Log.w(TAG, "Failed to create video track for recording");
@@ -1651,6 +1656,7 @@ final class LocalMediaTracks {
                     videoCapturer = capturer;
                     surfaceTextureHelper = helper;
                     videoSource = vSource;
+                    currentCameraFacing = attemptFacing; // Update current facing mode
                     videoTrack = peerConnectionFactory.createVideoTrack(trackId, vSource);
                     return videoTrack;
                 } else {
@@ -1669,9 +1675,106 @@ final class LocalMediaTracks {
 
     synchronized void switchCamera() {
         if (videoCapturer instanceof CameraVideoCapturer) {
+            // Toggle the current facing mode
+            currentCameraFacing = (currentCameraFacing == Facing.FRONT) ? Facing.BACK : Facing.FRONT;
             ((CameraVideoCapturer) videoCapturer).switchCamera(null);
         }
     }
+
+    /**
+     * Gets the current camera facing mode.
+     *
+     * @return String representation of current camera facing mode
+     */
+    public String getCurrentCameraFacingMode() {
+        if (videoCapturer instanceof CameraVideoCapturer) {
+            // Return the current facing mode as string
+            return currentCameraFacing.toString();
+        }
+        return "unknown";
+    }
+
+    /**
+     * Sets the current camera facing mode (called from React Native layer).
+     *
+     * @param facingMode String representation of camera facing mode (FRONT/BACK)
+     */
+    public void setCurrentCameraFacingMode(String facingMode) {
+        try {
+            Facing newFacing;
+            if ("FRONT".equalsIgnoreCase(facingMode)) {
+                newFacing = Facing.FRONT;
+            } else if ("BACK".equalsIgnoreCase(facingMode)) {
+                newFacing = Facing.BACK;
+            } else {
+                Log.w(TAG, "Unknown facing mode: " + facingMode);
+                return;
+            }
+            
+            if (currentCameraFacing != newFacing) {
+                Log.i(TAG, "Camera facing mode changed from " + currentCameraFacing + " to " + newFacing);
+                currentCameraFacing = newFacing;
+                
+                // If recording is active, restart video capture with new camera
+                if (isRecordingToFile && mediaRecorder != null) {
+                    Log.i(TAG, "Restarting video capture with new camera facing mode: " + newFacing);
+                    restartVideoCaptureWithNewCamera();
+                }
+            } else {
+                Log.i(TAG, "Camera facing mode already set to: " + currentCameraFacing);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to set camera facing mode: " + facingMode, e);
+        }
+    }
+
+
+    /**
+     * Restarts video capture with the new camera facing mode during recording.
+     */
+    private void restartVideoCaptureWithNewCamera() {
+        try {
+            Log.i(TAG, "Restarting video capture with camera facing: " + currentCameraFacing);
+            
+            // Stop current video capture
+            if (videoCapturer != null) {
+                videoCapturer.stopCapture();
+                videoCapturer.dispose();
+            }
+            
+            // Create new video track with current camera facing mode
+            String newTrackId = "JITSI_RECORDING_RESTARTED_" + System.currentTimeMillis();
+            VideoTrack newVideoTrack = createVideoTrack(newTrackId, currentCameraFacing, 640, 480, 30);
+            
+            if (newVideoTrack != null) {
+                Log.i(TAG, "Successfully restarted video capture with new camera: " + currentCameraFacing);
+                // Update the video track reference
+                videoTrack = newVideoTrack;
+            } else {
+                Log.e(TAG, "Failed to restart video capture with new camera");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error restarting video capture with new camera", e);
+        }
+    }
+
+    /**
+     * Stops camera capture and switches to black frame generation.
+     */
+    private void stopCameraCapture() {
+        try {
+            Log.i(TAG, "Stopping camera capture");
+            if (videoCapturer != null) {
+                videoCapturer.stopCapture();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error stopping camera capture", e);
+        }
+    }
+
+
+
+
 
     synchronized void stopVideoCapture() {
         if (videoCapturer == null) return;

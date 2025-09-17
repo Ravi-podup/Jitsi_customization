@@ -4,6 +4,9 @@ import { NativeModules, Platform } from 'react-native';
 
 interface ILocalRecordingManager {
     addAudioTrackToLocalRecording: (track: any) => void;
+    cleanupGlobalReference: () => void;
+    getCameraSwitchCallback: () => ((event: { from: string; to: string; timestamp: number }) => void) | null;
+    getCurrentCameraFacingMode: () => Promise<string>;
     isRecordingLocally: () => boolean;
     isSupported: () => boolean;
     resetRecordingState: () => void;
@@ -11,14 +14,21 @@ interface ILocalRecordingManager {
         on: boolean;
         withVideo: boolean;
     };
+    setCameraSwitchCallback: (callback: (event: { from: string; to: string; timestamp: number }) => void) => void;
+    setupCameraSwitchCallback: () => void;
     startLocalRecording: (store: IStore, onlySelf: boolean) => Promise<void>;
     stopLocalRecording: () => void;
+    syncCameraStateWithNative: (facingMode: string) => void;
 }
 
 const { LocalMedia } = NativeModules as any;
 
 let recording = false;
 let storeRef: IStore | null = null;
+
+
+// Camera switch event handler
+let onCameraSwitchCallback: ((event: { from: string; to: string; timestamp: number }) => void) | null = null;
 
 const LocalRecordingManager: ILocalRecordingManager = {
     selfRecording: {
@@ -80,6 +90,9 @@ const LocalRecordingManager: ILocalRecordingManager = {
         recording = false;
         LocalRecordingManager.selfRecording.on = false;
         LocalRecordingManager.selfRecording.withVideo = false;
+        
+        // Clear the global reference to prevent issues
+        this.cleanupGlobalReference();
     },
 
     /**
@@ -103,6 +116,9 @@ const LocalRecordingManager: ILocalRecordingManager = {
             if (LocalMedia?.initialize) {
                 await LocalMedia.initialize();
             }
+            
+            // Set up camera switch callback for recording
+            this.setupCameraSwitchCallback();
             
             // Test file writing first
             if (LocalMedia?.testFileWriting) {
@@ -178,8 +194,117 @@ const LocalRecordingManager: ILocalRecordingManager = {
         recording = false;
         LocalRecordingManager.selfRecording.on = false;
         LocalRecordingManager.selfRecording.withVideo = false;
+    },
+
+    /**
+     * Sets a callback function to be called when camera is switched.
+     *
+     * @param {Function} callback - Function to call when camera switches
+     * @returns {void}
+     */
+    setCameraSwitchCallback(callback: (event: { from: string; to: string; timestamp: number }) => void) {
+        onCameraSwitchCallback = callback;
+    },
+
+    /**
+     * Gets the current camera switch callback.
+     *
+     * @returns {Function|null} Current callback function or null
+     */
+    getCameraSwitchCallback() {
+        return onCameraSwitchCallback;
+    },
+
+    /**
+     * Gets the current camera facing mode from native layer.
+     *
+     * @returns {Promise<string>} Current camera facing mode (FRONT/BACK)
+     */
+    async getCurrentCameraFacingMode(): Promise<string> {
+        try {
+            if (LocalMedia?.getCurrentCameraFacingMode) {
+                const facingMode = await LocalMedia.getCurrentCameraFacingMode();
+                console.log('LocalRecordingManager: Current camera facing mode:', facingMode);
+                return facingMode;
+            }
+            return 'unknown';
+        } catch (error) {
+            console.warn('LocalRecordingManager: Failed to get camera facing mode:', error);
+            return 'unknown';
+        }
+    },
+
+    /**
+     * Sets up camera switch callback for recording.
+     *
+     * @returns {void}
+     */
+    setupCameraSwitchCallback() {
+        console.log('LocalRecordingManager: Setting up camera switch callback for recording');
+        
+        // Set up a simple callback for logging
+        this.setCameraSwitchCallback((event) => {
+            console.log('LocalRecordingManager: Camera switch detected during recording:', event);
+        });
+    },
+
+    /**
+     * Syncs camera state with native layer when camera switch is detected.
+     *
+     * @param {string} facingMode - New camera facing mode (user/environment)
+     * @returns {void}
+     */
+    syncCameraStateWithNative(facingMode: string) {
+        try {
+            console.log('LocalRecordingManager: syncCameraStateWithNative called with:', facingMode);
+            
+            // Convert Jitsi Meet facing mode to native facing mode
+            let nativeFacingMode: string;
+            if (facingMode === 'user') {
+                nativeFacingMode = 'FRONT';
+            } else if (facingMode === 'environment') {
+                nativeFacingMode = 'BACK';
+            } else {
+                console.warn('LocalRecordingManager: Unknown facing mode:', facingMode);
+                return;
+            }
+
+            console.log('LocalRecordingManager: Converting to native facing mode:', nativeFacingMode);
+
+            // Update native layer
+            if (LocalMedia?.setCurrentCameraFacingMode) {
+                LocalMedia.setCurrentCameraFacingMode(nativeFacingMode);
+                console.log('LocalRecordingManager: Successfully synced camera state with native:', nativeFacingMode);
+            } else {
+                console.warn('LocalRecordingManager: setCurrentCameraFacingMode method not available');
+            }
+        } catch (error) {
+            console.warn('LocalRecordingManager: Failed to sync camera state:', error);
+        }
+    },
+
+
+    /**
+     * Cleans up global reference to prevent memory leaks and context issues.
+     *
+     * @returns {void}
+     */
+    cleanupGlobalReference() {
+        try {
+            if (typeof window !== 'undefined' && (window as any).LocalRecordingManager) {
+                console.log('LocalRecordingManager: Cleaning up global reference');
+                delete (window as any).LocalRecordingManager;
+            }
+        } catch (error) {
+            console.warn('LocalRecordingManager: Failed to cleanup global reference:', error);
+        }
     }
 
 };
+
+// Make LocalRecordingManager available globally for middleware access
+if (typeof window !== 'undefined') {
+    (window as any).LocalRecordingManager = LocalRecordingManager;
+}
 
 export default LocalRecordingManager;

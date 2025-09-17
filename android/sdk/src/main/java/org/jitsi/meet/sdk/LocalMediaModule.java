@@ -70,7 +70,17 @@ class LocalMediaModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void switchCamera() {
+        // Get current camera facing mode before switching
+        String currentFacingMode = LocalMediaTracks.getInstance().getCurrentCameraFacingMode();
+        
+        // Switch the camera
         LocalMediaTracks.getInstance().switchCamera();
+        
+        // Get new camera facing mode after switching
+        String newFacingMode = LocalMediaTracks.getInstance().getCurrentCameraFacingMode();
+        
+        // Log camera switch event
+        android.util.Log.i("LocalMediaModule", "Camera switched from: " + currentFacingMode + " to: " + newFacingMode);
     }
 
     @ReactMethod
@@ -177,6 +187,26 @@ class LocalMediaModule extends ReactContextBaseJavaModule {
             promise.reject("listRecordingFiles", t);
         }
     }
+
+    @ReactMethod
+    public void getCurrentCameraFacingMode(Promise promise) {
+        try {
+            String facingMode = LocalMediaTracks.getInstance().getCurrentCameraFacingMode();
+            promise.resolve(facingMode);
+        } catch (Throwable t) {
+            promise.reject("getCurrentCameraFacingMode", t);
+        }
+    }
+
+    @ReactMethod
+    public void setCurrentCameraFacingMode(String facingMode) {
+        try {
+            LocalMediaTracks.getInstance().setCurrentCameraFacingMode(facingMode);
+        } catch (Throwable t) {
+            android.util.Log.e("LocalMediaModule", "Failed to set camera facing mode", t);
+        }
+    }
+
 
     private boolean hasPermission(String perm) {
         return ContextCompat.checkSelfPermission(getReactApplicationContext(), perm)
