@@ -7,6 +7,7 @@ import { hideSplash } from 'react-native-splash-view';
 
 import BottomSheetContainer from '../../base/dialog/components/native/BottomSheetContainer';
 import DialogContainer from '../../base/dialog/components/native/DialogContainer';
+import RecordingCountdown from '../../recording/components/Recording/native/RecordingCountdown';
 import { updateFlags } from '../../base/flags/actions';
 import { CALL_INTEGRATION_ENABLED } from '../../base/flags/constants';
 import { clientResized, setSafeAreaInsets } from '../../base/responsive-ui/actions';
@@ -281,6 +282,7 @@ export class App extends AbstractApp<IProps> {
                 style = { StyleSheet.absoluteFill }>
                 <BottomSheetContainer />
                 <DialogContainer />
+                <RecordingCountdown />
             </DialogContainerWrapper>
         );
     }

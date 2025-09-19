@@ -111,6 +111,10 @@
 		DEFC743F21B178FA00E4DD96 /* LocaleDetector.m in Sources */ = {isa = PBXBuildFile; fileRef = DEFC743D21B178FA00E4DD96 /* LocaleDetector.m */; };
 		DEFE535421FB1BF800011A3A /* JitsiMeet.m in Sources */ = {isa = PBXBuildFile; fileRef = DEFE535321FB1BF800011A3A /* JitsiMeet.m */; };
 		DEFE535621FB2E8300011A3A /* ReactUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = DEFE535521FB2E8300011A3A /* ReactUtils.m */; };
+		LOCALMEDIA003 /* LocalMedia.h in Headers */ = {isa = PBXBuildFile; fileRef = LOCALMEDIA001 /* LocalMedia.h */; };
+		LOCALMEDIA004 /* LocalMedia.m in Sources */ = {isa = PBXBuildFile; fileRef = LOCALMEDIA002 /* LocalMedia.m */; };
+		LOCALMEDIA005 /* LocalMedia.h in Headers */ = {isa = PBXBuildFile; fileRef = LOCALMEDIA001 /* LocalMedia.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		LOCALMEDIA006 /* LocalMedia.m in Sources */ = {isa = PBXBuildFile; fileRef = LOCALMEDIA002 /* LocalMedia.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -185,6 +189,8 @@
 		DEFE535521FB2E8300011A3A /* ReactUtils.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReactUtils.m; sourceTree = "<group>"; };
 		DEFE535721FB2E9E00011A3A /* ReactUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReactUtils.h; sourceTree = "<group>"; };
 		DEFE535821FB311F00011A3A /* JitsiMeet+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "JitsiMeet+Private.h"; sourceTree = "<group>"; };
+		LOCALMEDIA001 /* LocalMedia.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalMedia.h; sourceTree = "<group>"; };
+		LOCALMEDIA002 /* LocalMedia.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalMedia.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -273,6 +279,8 @@
 				4E812F3628F9A4ED0087ACC9 /* JitsiMeetView+Private.m */,
 				0B412F161EDEC65D00B1A0A6 /* JitsiMeetView.h */,
 				0B412F171EDEC65D00B1A0A6 /* JitsiMeetView.m */,
+				LOCALMEDIA001 /* LocalMedia.h */,
+				LOCALMEDIA002 /* LocalMedia.m */,
 				DE81A2D72316AC7600AE1940 /* LogBridge.m */,
 				DE65AAC92317FFCD00290BEC /* LogUtils.h */,
 				DEAFA777229EAD3B0033A7FA /* RNRootView.h */,
@@ -362,6 +370,7 @@
 			files = (
 				DE762DB422AFDE76000DEBD6 /* JitsiMeetUserInfo.h in Headers */,
 				0B412F181EDEC65D00B1A0A6 /* JitsiMeetView.h in Headers */,
+				LOCALMEDIA003 /* LocalMedia.h in Headers */,
 				0B93EF7E1EC9DDCD0030D24D /* RCTBridgeWrapper.h in Headers */,
 				DE81A2DE2317ED5400AE1940 /* JitsiMeetBaseLogHandler.h in Headers */,
 				DEA9F284258A5D9900D4CD74 /* JitsiMeetSDK.h in Headers */,
@@ -388,6 +397,7 @@
 			files = (
 				DE9A0130289A9A9A00E41CBB /* JitsiMeetUserInfo.h in Headers */,
 				DE9A0131289A9A9A00E41CBB /* JitsiMeetView.h in Headers */,
+				LOCALMEDIA005 /* LocalMedia.h in Headers */,
 				DE9A0132289A9A9A00E41CBB /* RCTBridgeWrapper.h in Headers */,
 				DE9A0133289A9A9A00E41CBB /* JitsiMeetBaseLogHandler.h in Headers */,
 				DE9A0134289A9A9A00E41CBB /* JitsiMeetSDK.h in Headers */,
@@ -680,6 +690,7 @@
 				A4A934E9212F3ADB001E9388 /* Dropbox.m in Sources */,
 				DE81A2D52316AC4D00AE1940 /* JitsiMeetLogger.m in Sources */,
 				0B412F191EDEC65D00B1A0A6 /* JitsiMeetView.m in Sources */,
+				LOCALMEDIA004 /* LocalMedia.m in Sources */,
 				DEFE535421FB1BF800011A3A /* JitsiMeet.m in Sources */,
 				DE438CDA2350934700DD541D /* JavaScriptSandbox.m in Sources */,
 			);
@@ -696,6 +707,7 @@
 				DE9A0147289A9A9A00E41CBB /* AppInfo.m in Sources */,
 				DE9A0148289A9A9A00E41CBB /* LogBridge.m in Sources */,
 				DE9A0149289A9A9A00E41CBB /* RNRootView.m in Sources */,
+				LOCALMEDIA006 /* LocalMedia.m in Sources */,
 				DE9A014A289A9A9A00E41CBB /* JitsiMeetUserInfo.m in Sources */,
 				DE9A014B289A9A9A00E41CBB /* JitsiMeetConferenceOptions.m in Sources */,
 				DE9A014C289A9A9A00E41CBB /* RCTBridgeWrapper.m in Sources */,

@@ -67,11 +67,11 @@
 	<key>NSCalendarsUsageDescription</key>
 	<string>See your scheduled meetings in the app.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Participate in meetings with video.</string>
+	<string>Participate in meetings with video and record video.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Local network is used for establishing Peer-to-Peer connections.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Participate in meetings with voice.</string>
+	<string>Participate in meetings with voice and record audio.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>org.jitsi.JitsiMeet.ios.conference</string>

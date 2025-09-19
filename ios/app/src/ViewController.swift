@@ -23,7 +23,6 @@ import JitsiMeetSDK
 
 @objcMembers
 class ViewController: UIViewController {
-    let recorder = RNLocalRecorder()
     override func loadView() {
         let jitsiView = JitsiMeetView(frame: UIScreen.main.bounds)
         self.view = jitsiView

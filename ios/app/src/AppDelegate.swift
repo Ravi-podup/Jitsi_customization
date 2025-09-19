@@ -21,10 +21,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         jitsiMeet.defaultConferenceOptions = JitsiMeetConferenceOptions.fromBuilder { builder in
             // For testing configOverrides a room needs to be set
             // builder.room = "https://meet.jit.si/test0988test"
-
+            builder.serverURL = URL(string: "https://recorder.stage.podup.com")
             builder.setFeatureFlag("welcomepage.enabled", withBoolean: true)
             builder.setFeatureFlag("ios.screensharing.enabled", withBoolean: true)
             builder.setFeatureFlag("ios.recording.enabled", withBoolean: true)
+            builder.setFeatureFlag("recording.enabled", withBoolean: true)
         }
 
         jitsiMeet.application(application, didFinishLaunchingWithOptions: launchOptions ?? [:])

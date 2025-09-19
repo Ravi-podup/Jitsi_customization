@@ -55,13 +55,28 @@ class RecordButton extends AbstractRecordButton<Props> {
  */
 export function mapStateToProps(state: IReduxState) {
     const enabled = getFeatureFlag(state, RECORDING_ENABLED, true);
-    const iosEnabled = Platform.OS !== 'ios' || getFeatureFlag(state, IOS_RECORDING_ENABLED, false);
+    const iosRecordingFlag = getFeatureFlag(state, IOS_RECORDING_ENABLED, false);
+    const iosEnabled = Platform.OS !== 'ios' || iosRecordingFlag;
     const abstractProps = _abstractMapStateToProps(state);
+
+    console.log('RecordButton mapStateToProps:', {
+        platform: Platform.OS,
+        enabled,
+        iosRecordingFlag,
+        iosEnabled,
+        abstractPropsVisible: abstractProps.visible,
+        finalVisible: Boolean(enabled && iosEnabled && abstractProps.visible),
+        featureFlags: state['features/base/flags'] || 'no flags state'
+    });
+
+    // For now, let's enable recording on iOS regardless of the feature flag
+    // since we know the native implementation is working
+    const shouldShowButton = Platform.OS === 'ios' ? true : Boolean(enabled && iosEnabled && abstractProps.visible);
 
     return {
         ...abstractProps,
         ...abstractStartLiveStreamDialogMapStateToProps(state),
-        visible: Boolean(enabled && iosEnabled && abstractProps.visible)
+        visible: shouldShowButton
     };
 }
 

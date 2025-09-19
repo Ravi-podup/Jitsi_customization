@@ -1,4 +1,5 @@
 import i18next from 'i18next';
+import { Platform } from 'react-native';
 
 import { IReduxState, IStore } from '../app/types';
 import { MEET_FEATURES } from '../base/jwt/constants';
@@ -7,14 +8,14 @@ import { JitsiRecordingConstants } from '../base/lib-jitsi-meet';
 import { getSoundFileSrc } from '../base/media/functions';
 import { getLocalParticipant, getRemoteParticipants } from '../base/participants/functions';
 import { registerSound, unregisterSound } from '../base/sounds/actions';
-import { isEmbedded } from '../base/util/embedUtils';
+import { isEmbedded } from '../base/util/embedUtils.native';
 import { isSpotTV } from '../base/util/spot';
 import { isInBreakoutRoom as isInBreakoutRoomF } from '../breakout-rooms/functions';
-import { isEnabled as isDropboxEnabled } from '../dropbox/functions';
+import { isEnabled as isDropboxEnabled } from '../dropbox/functions.native';
 import { extractFqnFromPath } from '../dynamic-branding/functions.any';
 import { canAddTranscriber, isRecorderTranscriptionsRunning } from '../transcribing/functions';
 
-import LocalRecordingManager from './components/Recording/LocalRecordingManager';
+import LocalRecordingManager from './components/Recording/LocalRecordingManager.native';
 import {
     LIVE_STREAMING_OFF_SOUND_ID,
     LIVE_STREAMING_ON_SOUND_ID,
@@ -152,7 +153,17 @@ export function getSessionStatusToShow(state: IReduxState, mode: string): string
  * @returns {boolean} - Whether local recording is supported or not.
  */
 export function supportsLocalRecording() {
-    return LocalRecordingManager.isSupported() && !isEmbedded();
+    const isSupported = LocalRecordingManager.isSupported();
+    const isNotEmbedded = !isEmbedded();
+    const result = isSupported && isNotEmbedded;
+    
+    console.log('supportsLocalRecording check:', {
+        isSupported,
+        isNotEmbedded,
+        result
+    });
+    
+    return result;
 }
 
 /**
@@ -259,12 +270,30 @@ export function getRecordButtonProps(state: IReduxState) {
     const localRecordingEnabled = !localRecording?.disable && supportsLocalRecording();
 
     const dropboxEnabled = isDropboxEnabled(state);
+    // For local recording, we don't need recordingService to be enabled
+    // The local recording should work independently
     const recordingEnabled = recordingService?.enabled || dropboxEnabled;
 
-    if (localRecordingEnabled) {
+    console.log('getRecordButtonProps check:', {
+        localRecordingDisabled: localRecording?.disable,
+        localRecordingEnabled,
+        dropboxEnabled,
+        recordingEnabled,
+        recordingServiceEnabled: recordingService?.enabled
+    });
+
+    // For iOS, prioritize local recording support
+    if (Platform.OS === 'ios' && supportsLocalRecording()) {
         visible = true;
+        console.log('getRecordButtonProps: Button visible - iOS local recording supported');
+    } else if (localRecordingEnabled) {
+        visible = true;
+        console.log('getRecordButtonProps: Button visible - local recording enabled');
     } else if (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)) {
         visible = recordingEnabled;
+        console.log('getRecordButtonProps: Button visibility based on JWT feature:', visible);
+    } else {
+        console.log('getRecordButtonProps: Button not visible - no conditions met');
     }
 
     // disable the button if the livestreaming is running.

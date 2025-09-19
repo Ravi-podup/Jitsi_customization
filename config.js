@@ -415,21 +415,21 @@ var config = {
     //    // consentLearnMoreLink: 'https://jitsi.org/meet/consent',
     },
 
-    // recordingService: {
-    //     // When integrations like dropbox are enabled only that will be shown,
-    //     // by enabling fileRecordingsServiceEnabled, we show both the integrations
-    //     // and the generic recording service (its configuration and storage type
-    //     // depends on jibri configuration)
-    //     enabled: false,
+    recordingService: {
+        // When integrations like dropbox are enabled only that will be shown,
+        // by enabling fileRecordingsServiceEnabled, we show both the integrations
+        // and the generic recording service (its configuration and storage type
+        // depends on jibri configuration)
+        enabled: true,
 
-    //     // Whether to show the possibility to share file recording with other people
-    //     // (e.g. meeting participants), based on the actual implementation
-    //     // on the backend.
-    //     sharingEnabled: false,
+        // Whether to show the possibility to share file recording with other people
+        // (e.g. meeting participants), based on the actual implementation
+        // on the backend.
+        sharingEnabled: true,
 
-    //     // Hide the warning that says we only store the recording for 24 hours.
-    //     hideStorageWarning: false,
-    // },
+        // Hide the warning that says we only store the recording for 24 hours.
+        hideStorageWarning: false,
+    },
 
     // DEPRECATED. Use recordingService.enabled instead.
     // fileRecordingsServiceEnabled: false,
